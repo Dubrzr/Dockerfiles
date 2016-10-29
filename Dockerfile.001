@@ -5,21 +5,28 @@ MAINTAINER contact@invasis.com
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
 	pkg-config \
-	dh-autoreconf
+	dh-autoreconf \
+	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install build & doc tools
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
         cmake \
-	doxygen
+	doxygen \
+	dh-autoreconf \
+	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+ 
 
 # Install basic cli tools
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
         unzip \
         git \
-        wget
+        wget \
+	dh-autoreconf \
+	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+ 
 
 # Install libs
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
         libboost-all-dev \
         libgflags-dev \
         libgoogle-glog-dev \
@@ -53,11 +60,15 @@ RUN apt-get install -y --no-install-recommends \
 	x264 \
 	x265 \
         protobuf-compiler \
-	swig
+	swig \
+	rsync \
+	dh-autoreconf \
+	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+ 
 
 
 # Install Python 2 & 3
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
 	python-dev \
 	python3-dev \
 	python-numpy \
@@ -65,45 +76,61 @@ RUN apt-get install -y --no-install-recommends \
 	python-pip \
 	python3-pip \
 	python-virtualenv \
-	python-wheel
+	python-wheel \
+	dh-autoreconf \
+	python-setuptools \
+	python3-setuptools \
+	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install Java 8 JDK
-RUN apt-get update && apt-get install -y software-properties-common
-RUN add-apt-repository -y ppa:webupd8team/java
-RUN echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections
-RUN echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-	oracle-java8-installer
-
-RUN apt-get install -y --no-install-recommends \
-	oracle-java8-set-default
-
-ENV JAVA_HOME "/usr/lib/jvm/java-8-oracle"
-
-
-# CLEAN
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
-
-# Install OpenCV 3.1
-ENV OPENCV_ROOT /opt/opencv-3.1.0
-WORKDIR $OPENCV_ROOT
-
-RUN git clone --branch master https://github.com/opencv/opencv.git .
-RUN git checkout de35c59ba4cf863d014e130c9116a0d5dade7c91
-WORKDIR $OPENCV_ROOT/build
-RUN cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local -D CUDA_FAST_MATH:BOOL="1" -D WITH_NVCUVID:BOOL="1" -D WITH_CUBLAS:BOOL="1" -D BUILD_DOCS:BOOL="1" ..
-RUN make -j7
-RUN make install && echo "/usr/local/lib" | tee -a /etc/ld.so.conf.d/opencv.conf && ldconfig
-RUN cp /opt/opencv-3.1.0/build/lib/cv2.so /usr/lib/python2.7/dist-packages/cv2.so
+RUN pip2 install --upgrade pip
+RUN pip3 install --upgrade pip
+ 
 
 # Install Bazel
 #WORKDIR /opt/bazel
 #RUN wget https://github.com/bazelbuild/bazel/releases/download/0.2.2/bazel-0.2.2-jdk7-installer-darwin-x86_64.sh -O bazel-install.sh && bash bazel-install.sh
 RUN echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
 RUN curl https://bazel.io/bazel-release.pub.gpg | apt-key add -
-RUN apt-get update && apt-get install -y bazel
+RUN apt-get install -y --no-install-recommends \
+	bazel \
+	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+
+# Install Java 8 JDK
+RUN apt-get update && apt-get install -y --no-install-recommends \
+	software-properties-common \
+	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN add-apt-repository -y ppa:webupd8team/java
+RUN echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections
+RUN echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+	oracle-java8-installer \
+	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN apt-get install -y --no-install-recommends \
+	oracle-java8-set-default \
+	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+ENV JAVA_HOME "/usr/lib/jvm/java-8-oracle"
+
+
+# Install OpenCV 3.1
+ENV OPENCV_ROOT /opt/opencv-3.1.0
+WORKDIR $OPENCV_ROOT
+
+RUN git clone --branch master https://github.com/opencv/opencv.git . \
+	&& git checkout de35c59ba4cf863d014e130c9116a0d5dade7c91 && \
+	cd $OPENCV_ROOT/build && \
+	cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local -D CUDA_FAST_MATH:BOOL="1" -D WITH_NVCUVID:BOOL="1" -D WITH_CUBLAS:BOOL="1" -D BUILD_DOCS:BOOL="1" .. && \
+	make -j8 && \
+	make install && \
+	echo "/usr/local/lib" | tee -a /etc/ld.so.conf.d/opencv.conf && \
+	ldconfig && \
+	cp /opt/opencv-3.1.0/build/lib/cv2.so /usr/lib/python2.7/dist-packages/cv2.so && \
+	cd /opt && rm -rf $OPENCV_ROOT
+
 
 # Install Tensorflow
 ENV TENSORFLOW_ROOT /opt/tensorflow
@@ -122,40 +149,35 @@ ENV CC="/usr/bin/gcc"
 ENV CXX="/usr/bin/g++"
 ENV GCC_HOST_COMPILER_PATH=$CC
 ENV BUILDFLAGS="--config=cuda --copt=-m64 --linkopt=-m64"
-RUN git clone --branch master https://github.com/tensorflow/tensorflow.git .
-RUN git checkout v0.11.0rc1
 
-# Add build rule (https://github.com/cjweeks/tensorflow-cmake)
-RUN echo "cc_binary(" >> tensorflow/BUILD
-RUN echo "name = \"libtensorflow_all.so\"," >> tensorflow/BUILD
-RUN echo "linkshared = 1," >> tensorflow/BUILD
-RUN echo "linkopts = [\"-Wl,--version-script=tensorflow/tf_version_script.lds\"]," >> tensorflow/BUILD
-RUN echo "deps = [" >> tensorflow/BUILD
-RUN echo "\"//tensorflow/cc:cc_ops\"," >> tensorflow/BUILD
-RUN echo "\"//tensorflow/core:framework_internal\"," >> tensorflow/BUILD
-RUN echo "\"//tensorflow/core:tensorflow\"," >> tensorflow/BUILD
-RUN echo "],)" >> tensorflow/BUILD
-
-RUN ./configure
-RUN bazel build -c opt //tensorflow:libtensorflow_all.so $BUILDFLAGS --spawn_strategy=standalone --genrule_strategy=standalone --verbose_failures
-RUN cp bazel-bin/tensorflow/libtensorflow_all.so /usr/local/lib
-RUN apt-get install -y rsync python-setuptools python3-setuptools
-RUN bazel build -c opt tensorflow/tools/pip_package:build_pip_package $BUILDFLAGS --spawn_strategy=standalone --genrule_strategy=standalone --verbose_failures
-RUN bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/pip
-RUN pip2 install --upgrade pip
-RUN pip2 install /tmp/pip/tensorflow-*.whl
-
-RUN mkdir -p /usr/local/include/google/tensorflow
-RUN cp -r tensorflow /usr/local/include/google/tensorflow/
-RUN find /usr/local/include/google/tensorflow/tensorflow -type f  ! -name "*.h" -delete
-
-RUN cp bazel-genfiles/tensorflow/core/framework/*.h  /usr/local/include/google/tensorflow/tensorflow/core/framework
-RUN cp bazel-genfiles/tensorflow/core/kernels/*.h  /usr/local/include/google/tensorflow/tensorflow/core/kernels
-RUN cp bazel-genfiles/tensorflow/core/lib/core/*.h  /usr/local/include/google/tensorflow/tensorflow/core/lib/core
-RUN cp bazel-genfiles/tensorflow/core/protobuf/*.h  /usr/local/include/google/tensorflow/tensorflow/core/protobuf
-RUN cp bazel-genfiles/tensorflow/core/util/*.h  /usr/local/include/google/tensorflow/tensorflow/core/util
-RUN cp bazel-genfiles/tensorflow/cc/ops/*.h  /usr/local/include/google/tensorflow/tensorflow/cc/ops
-
-RUN cp -r third_party /usr/local/include/google/tensorflow/
-RUN rm -r /usr/local/include/google/tensorflow/third_party/py
-RUN rm -r /usr/local/include/google/tensorflow/third_party/avro
+# https://github.com/cjweeks/tensorflow-cmake
+RUN git clone --branch master https://github.com/tensorflow/tensorflow.git . && \
+	git checkout v0.11.0rc1 && \
+	echo "cc_binary(\n\
+	  name = \"libtensorflow_all.so\",\n\
+	  linkshared = 1,\n\
+	  linkopts = [\"-Wl,--version-script=tensorflow/tf_version_script.lds\"],\n\
+	  deps = [\n\
+	  \"//tensorflow/cc:cc_ops\",\n\
+	  \"//tensorflow/core:framework_internal\",\n\
+	  \"//tensorflow/core:tensorflow\",\n\
+	  ],)" >> tensorflow/BUILD && \
+	./configure && \
+	bazel build -c opt //tensorflow:libtensorflow_all.so $BUILDFLAGS --spawn_strategy=standalone --genrule_strategy=standalone --verbose_failures && \
+	cp bazel-bin/tensorflow/libtensorflow_all.so /usr/local/lib && \
+	bazel build -c opt tensorflow/tools/pip_package:build_pip_package $BUILDFLAGS --spawn_strategy=standalone --genrule_strategy=standalone --verbose_failures && \
+	bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/pip && \
+	pip2 install /tmp/pip/tensorflow-*.whl && \
+	mkdir -p /usr/local/include/google/tensorflow && \
+	cp -r tensorflow /usr/local/include/google/tensorflow/ && \
+	find /usr/local/include/google/tensorflow/tensorflow -type f  ! -name "*.h" -delete && \
+	cp bazel-genfiles/tensorflow/core/framework/*.h  /usr/local/include/google/tensorflow/tensorflow/core/framework && \
+	cp bazel-genfiles/tensorflow/core/kernels/*.h  /usr/local/include/google/tensorflow/tensorflow/core/kernels && \
+	cp bazel-genfiles/tensorflow/core/lib/core/*.h  /usr/local/include/google/tensorflow/tensorflow/core/lib/core && \
+	cp bazel-genfiles/tensorflow/core/protobuf/*.h  /usr/local/include/google/tensorflow/tensorflow/core/protobuf && \
+	cp bazel-genfiles/tensorflow/core/util/*.h  /usr/local/include/google/tensorflow/tensorflow/core/util && \
+	cp bazel-genfiles/tensorflow/cc/ops/*.h  /usr/local/include/google/tensorflow/tensorflow/cc/ops && \
+	cp -r third_party /usr/local/include/google/tensorflow/ && \
+	rm -r /usr/local/include/google/tensorflow/third_party/py && \
+	rm -r /usr/local/include/google/tensorflow/third_party/avro && \
+	cd /opt && rm -rf $TENSORFLOW_ROOT
