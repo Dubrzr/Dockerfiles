@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	doxygen \
 	dh-autoreconf \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
- 
+
 
 # Install basic cli tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         wget \
 	dh-autoreconf \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
- 
+
 
 # Install libs
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -64,7 +64,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	rsync \
 	dh-autoreconf \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
- 
+
 
 
 # Install Python 2 & 3
@@ -84,16 +84,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN pip2 install --upgrade pip
 RUN pip3 install --upgrade pip
- 
-
-# Install Bazel
-#WORKDIR /opt/bazel
-#RUN wget https://github.com/bazelbuild/bazel/releases/download/0.2.2/bazel-0.2.2-jdk7-installer-darwin-x86_64.sh -O bazel-install.sh && bash bazel-install.sh
-RUN echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
-RUN curl https://bazel.io/bazel-release.pub.gpg | apt-key add -
-RUN apt-get install -y --no-install-recommends \
-	bazel \
-	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 
 # Install Java 8 JDK
@@ -106,8 +96,7 @@ RUN echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-s
 RUN echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-	oracle-java8-installer \
-	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+	oracle-java8-installer
 
 RUN apt-get install -y --no-install-recommends \
 	oracle-java8-set-default \
@@ -116,13 +105,23 @@ RUN apt-get install -y --no-install-recommends \
 ENV JAVA_HOME "/usr/lib/jvm/java-8-oracle"
 
 
+# Install Bazel
+#WORKDIR /opt/bazel
+#RUN wget https://github.com/bazelbuild/bazel/releases/download/0.2.2/bazel-0.2.2-jdk7-installer-darwin-x86_64.sh -O bazel-install.sh && bash bazel-install.sh
+RUN echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
+RUN curl https://bazel.io/bazel-release.pub.gpg | apt-key add -
+RUN apt-get update && apt-get install -y --no-install-recommends \
+	bazel \
+	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+
 # Install OpenCV 3.1
 ENV OPENCV_ROOT /opt/opencv-3.1.0
 WORKDIR $OPENCV_ROOT
 
-RUN git clone --branch master https://github.com/opencv/opencv.git . \
-	&& git checkout de35c59ba4cf863d014e130c9116a0d5dade7c91 && \
-	cd $OPENCV_ROOT/build && \
+RUN git clone --branch master https://github.com/opencv/opencv.git . && \
+	git checkout de35c59ba4cf863d014e130c9116a0d5dade7c91 && \
+	mkdir build && cd build && \
 	cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local -D CUDA_FAST_MATH:BOOL="1" -D WITH_NVCUVID:BOOL="1" -D WITH_CUBLAS:BOOL="1" -D BUILD_DOCS:BOOL="1" .. && \
 	make -j8 && \
 	make install && \
@@ -180,4 +179,5 @@ RUN git clone --branch master https://github.com/tensorflow/tensorflow.git . && 
 	cp -r third_party /usr/local/include/google/tensorflow/ && \
 	rm -r /usr/local/include/google/tensorflow/third_party/py && \
 	rm -r /usr/local/include/google/tensorflow/third_party/avro && \
-	cd /opt && rm -rf $TENSORFLOW_ROOT
+	cd /opt && rm -rf $TENSORFLOW_ROOT && \
+	rm -rf /root/.cache

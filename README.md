@@ -8,6 +8,9 @@
 
 ## [Dockerfile.001](https://hub.docker.com/r/dubrzr/001/)
 
+[![Docker Pulls](https://img.shields.io/docker/pulls/dubrzr/001.svg)](https://hub.docker.com/r/dubrzr/001/)
+[![Docker Stars](https://img.shields.io/docker/stars/dubrzr/001.svg)](https://hub.docker.com/r/dubrzr/001/)
+
 * Ubuntu 16.04
 * CUDA 8.0
 * Python2&3
