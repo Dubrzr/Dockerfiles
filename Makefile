@@ -1,4 +1,5 @@
 %: Dockerfile.%
-	sudo docker build -f $^ .
-	sudo docker tag $(sudo docker images |head -n 2 |tail -n 1 | awk '{print $3}') dubrzr/$@:latest
+	OUT=`sudo docker build -f $^ .`; \
+	OUT=`echo $$OUT |awk '{ print $$NF }'`; \
+	sudo docker tag $$OUT dubrzr/$@:latest
 	sudo docker push dubrzr/$@
