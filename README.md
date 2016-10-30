@@ -20,4 +20,14 @@
 * Tensorflow r0.11
 
 
+## [Dockerfile.002](https://hub.docker.com/r/dubrzr/002/)
 
+[![Docker Pulls](https://img.shields.io/docker/pulls/dubrzr/002.svg)](https://hub.docker.com/r/dubrzr/002/)
+[![Docker Stars](https://img.shields.io/docker/stars/dubrzr/002.svg)](https://hub.docker.com/r/dubrzr/002/)
+
+* Ubuntu 16.04
+* Python2&3
+* JAVA 8 - JDK
+* OpenCV 3.1 (With python)
+* Bazel 0.2.2
+* Tensorflow r0.11

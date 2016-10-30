@@ -1,4 +1,4 @@
-FROM nvidia/cuda:8.0-cudnn5-devel-ubuntu16.04
+FROM ubuntu:16.04
 
 # Install base tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -34,7 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   liblmdb-dev \
   libprotobuf-dev \
   libsnappy-dev \
-	libavcodec-dev \
+  libavcodec-dev \
 	libavformat-dev \
 	libswscale-dev \
 	libtbb2 \
@@ -63,8 +63,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	rsync \
 	dh-autoreconf \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-
 
 # Install Python 2 & 3
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -121,7 +119,7 @@ WORKDIR $OPENCV_ROOT
 RUN git clone --branch master https://github.com/opencv/opencv.git . && \
 	git checkout de35c59ba4cf863d014e130c9116a0d5dade7c91 && \
 	mkdir build && cd build && \
-	cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local -D CUDA_FAST_MATH:BOOL="1" -D WITH_NVCUVID:BOOL="1" -D WITH_CUBLAS:BOOL="1" -D BUILD_DOCS:BOOL="1" .. && \
+	cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local -D -D BUILD_DOCS:BOOL="1" .. && \
 	make -j8 && \
 	make install && \
 	echo "/usr/local/lib" | tee -a /etc/ld.so.conf.d/opencv.conf && \
@@ -135,18 +133,13 @@ ENV TENSORFLOW_ROOT /opt/tensorflow
 WORKDIR $TENSORFLOW_ROOT
 
 ENV PYTHON_BIN_PATH="/usr/bin/python2.7"
-ENV TF_NEED_CUDA=1
+ENV TF_NEED_CUDA=0
 ENV TF_NEED_GCP=0
-ENV TF_CUDA_VERSION=8.0
-ENV TF_CUDA_COMPUTE_CAPABILITIES=3.0,3.5,5.2
-ENV TF_CUDNN_VERSION=5
-ENV CUDA_TOOLKIT_PATH=/usr/local/cuda
-ENV CUDNN_INSTALL_PATH=$CUDA_TOOLKIT_PATH
 ENV GCC_HOST_COMPILER_PATH=/usr/bin/gcc
 ENV CC="/usr/bin/gcc"
 ENV CXX="/usr/bin/g++"
 ENV GCC_HOST_COMPILER_PATH=$CC
-ENV BUILDFLAGS="--config=cuda --copt=-m64 --linkopt=-m64"
+ENV BUILDFLAGS="--copt=-m64 --linkopt=-m64"
 
 # https://github.com/cjweeks/tensorflow-cmake
 RUN git clone --branch master https://github.com/tensorflow/tensorflow.git . && \
