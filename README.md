@@ -31,3 +31,12 @@
 * OpenCV 3.1 (With python)
 * Bazel 0.2.2
 * Tensorflow r0.11
+
+
+## [Dockerfile.003](https://hub.docker.com/r/dubrzr/003/)
+
+[![Docker Pulls](https://img.shields.io/docker/pulls/dubrzr/003.svg)](https://hub.docker.com/r/dubrzr/003/)
+[![Docker Stars](https://img.shields.io/docker/stars/dubrzr/003.svg)](https://hub.docker.com/r/dubrzr/003/)
+
+Pull from Dockerfile.001, plus:
+* Protobuf 3.0.2

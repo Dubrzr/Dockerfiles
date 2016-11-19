@@ -1,0 +1,9 @@
+from dubrzr/001
+
+ENV PROTOCPP_URL=https://github.com/google/protobuf/releases/download/v3.0.2/protobuf-cpp-3.0.2.tar.gz
+WORKDIR /opt/protobuf3
+RUN wget $PROTOCPP_URL -O protobuf-cpp.tar.gz
+RUN tar xf protobuf-cpp.tar.gz
+WORKDIR /opt/protobuf3/protobuf-3.0.2
+RUN mkdir /opt/lib-proto3 && ./autogen.sh && ./configure --prefix=/opt/lib-proto3 && make -j8 && make install && cd /opt && rm -rf /opt/protobuf3
+WORKDIR /opt
