@@ -40,3 +40,12 @@
 
 Pull from Dockerfile.001, plus:
 * Protobuf 3.0.2
+
+
+## [Dockerfile.004](https://hub.docker.com/r/dubrzr/004/)
+
+[![Docker Pulls](https://img.shields.io/docker/pulls/dubrzr/004.svg)](https://hub.docker.com/r/dubrzr/004/)
+[![Docker Stars](https://img.shields.io/docker/stars/dubrzr/004.svg)](https://hub.docker.com/r/dubrzr/004/)
+
+* Ubuntu 16.04
+* All requirements for [stechec2](https://bitbucket.org/prologin/stechec2)
